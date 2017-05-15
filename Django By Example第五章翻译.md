@@ -2,11 +2,12 @@
 
 (审校者@夜夜月注：人多力量大，第五章由@ucag两天内独立翻译完毕)
 
-##**第五章**
-##**在你的网站中分享内容**
+#第五章 在你的网站中分享内容
 
 在上一章中，你为你的网站建立了用户注册和认证系统。你学习了如何为用户创建定制化的个人资料模型以及如何将主流的社交网络的认证添加进你的网站。
+
 在这一章中，你将学习如何通过创建一个  JavaScript 书签来从其他的站点分享内容到你的网站，你也将通过使用 jQuery 在你的项目中实现一些 AJAX 特性。
+
 这一章涵盖了以下几点：
 
  * 创建一个`many-to-many`（多对多）关系
@@ -17,7 +18,8 @@
  * 实现 AJAX 视图（views）并且使这些视图（views）和 jQuery 融合
  * 为视图（views）创建定制化的装饰器 （decorators）
  * 创建 AJAX 分页
-##**建立一个能为图片打标签的网站**
+ 
+##建立一个能为图片打标签的网站
 我们将允许用户可以在我们网站中分享他们在其他网站发现的图片，并且他们还可以为这些图片打上标签。为了达到这个目的，我们将要做以下几个任务：
 
  * 定义一个模型来储存图片以及图片的信息
@@ -36,15 +38,18 @@
     ]
 
 现在Django知道我们的新应用已经被激活了。
-##**创建图像模型**
+
+##创建图像模型
 编辑 images 应用中的 `models.py`  文件，将以下代码添加进去：
 
 ```python
 from django.db import models
 from django.conf import settings
+
+
 class Image(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
-    related_name='images_created')
+                             related_name ='images_created')
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200,blank=True)
     url = models.URLField()
@@ -52,14 +57,17 @@ class Image(models.Model):
     description = models.TextField(blank=True)
     created = models.DateField(auto_now_add=True,
                                db_index=True)
+    
     def __str__(self):
         return self.title
+
 ```
+
 我们将要使用这个模型来储存来自各个不同网站中被标记的图片。让我们来看看在这个模型中的字段：
 
  - `user`： 标记了这张图片 `User` 对象。这是一个 `ForeignKey`字段 (译者注：外键，即一对多字段)，因为它指定了一个一对多关系： 一个用户可以 post 多张图片， 但是每张图片只能由一个用户上传
  - `title`： 图片的标题
- - `slug`： 一个只包含字母、数字、下划线、和连字符的标签， 用于创建优美的 搜索引擎友好（SEO-friendly）的 URL（译者注：slug 这个词在中文没有很好的对应翻译，所以就请大家记住“slug 表示的是只有字母、数字、下划线和连字符的标签”。如果有仔细看过 Django 官方文档的读者就会知道： slug 是一个新闻术语， 而 Django 的开发目的也是为了更好的编辑新闻， 所以这里就不难理解为什么 Django 中会出现 slug 字段了）
+ - `slug`： 一个只包含字母、数字、下划线、和连字符的标签， 用于创建优美的搜索引擎友好（SEO-friendly）的 URL（译者注：slug 这个词在中文没有很好的对应翻译，所以就请大家记住“slug 表示的是只有字母、数字、下划线和连字符的标签”。如果有仔细看过 Django 官方文档的读者就会知道： slug 是一个新闻术语， 而 Django 的开发目的也是为了更好的编辑新闻， 所以这里就不难理解为什么 Django 中会出现 slug 字段了）
  - `url`： 这张图片的源 URL
  - `image`： 图片文件
  - `description`： 一个可选的图片描述字段
@@ -78,9 +86,14 @@ class Image(models.Model):
             self.slug = slugify(self.title)
             super(Image, self).save(*args, **kwargs)
 ```
-在这段代码中，我们使用了 Django 提供的`slugify()`函数在没有提供`slug`字段时根据给定的图片标题自动生slug,然后，我们保存了这个对象。我们自动生成slug，这样的话用户就不用自己输入`slug`字段了。
-##**建立多对多关系**
+
+在这段代码中，我们使用了 Django 提供的`slugify()`函数在没有提供`slug`字段时根据给定的图片标题自动生成slug，然后，我们保存了这个对象。我们自动生成slug，这样的话用户就不用自己输入`slug`字段了。
+
+
+##建立多对多关系
+
 我们将要在 Image 模型中再添加一个字段来保存喜欢这张图片的用户。因此，我们需要一个多对多关系。因为一个用户可能喜欢很多张图片，一张图片也可能被很多用户喜欢。
+
 在 Image 模型中添加以下字段：
 
 ```python
@@ -91,31 +104,39 @@ user_like = models.ManyToManyField(settings.AUTH_USER_MODEL,
 
 
 当你定义一个`ManyToMany`字段时，Django 会用两张表主键（primary key）创建一个中介联接表（译者注：就是新建一张普通的表，只是这张表的内容是由多对多关系双方的主键构成的）。`ManyToMany`字段可以在任意两个相关联的表中创建。
+
 同`ForeignKey`字段一样，`ManyToMany`字段的`related_name`属性使我们可以命名另模型回溯（或者是反查）到本模型对象的关系。`ManyToMany`字段提供了一个多对多管理器（manager），这个管理器使我们可以回溯相关联的对象比如：`image.users_like.all()`或者从一个`user`中回溯，比如：`user.images_liked.all()`。
+
 打开命令行，执行下面的命令以创建首次迁移：
 
-```
+```shell
 python manage.py makemigrations images
 ```
+
 你能看见以下输出：
 
-```
+```shell
 Migrations for 'images':
     0001_initial.py:
         - Create model Image
 ```
+
 现在执行这条命令来应用你的迁移：
 
-```
+
+```shell
 python manage.py migrate images
 ```
+
 你将会看到包含这一行输出：
 
-```
+```shell
 Applying images.0001_initial... OK
 ```
+
 现在 Image 模型已经在数据库中同步了。
-##**注册 Image 模型到管理站点中**
+
+##注册 Image 模型到管理站点中
 编辑 `images` 应用的 `admin.py` 文件，然后像下面这样将 `Image` 模型注册到管理站点中：
 
 ```python
@@ -127,16 +148,21 @@ class ImageAdmin(admin.ModelAdmin):
 
 admin.site.register(Image, ImageAdmin)
 ```
-使用命令`python manage.py runserver`打开开发服务器，在浏览器中打开`http://127.0.0.1:8000/admin/`,可以看到`Image`模型已经注册到了管理站点中：
 
-![Django-5-1][1]
-##**从其他网站上传内容**
-我们将使用户可以给从他们在其他网站发现的图片打上标签。用户将要提供图片的 URL ，标题，和一个可选的描述。我们的应用将要下载这幅图片，并且在数据库中创建一个新的 `Image` 对象。
+使用命令`python manage.py runserver`启动开发服务器，在浏览器中打开`http://127.0.0.1:8000/admin/`,可以看到`Image`模型已经注册到了管理站点中：
+
+![](images/chap5-img1.png)
+
+##从其他网站上传内容
+我们将允许用户可以给从他们在其他网站发现的图片打上标签。用户将要提供图片的 URL ，标题，和一个可选的描述。我们的应用将要下载这幅图片，并且在数据库中创建一个新的 `Image` 对象。
+
 我们从新建一个用于提交图片的表单开始。在images应用的路径下创建一个 `forms.py` 文件，在这个文件中添加如下代码：
 
 ```python
 from django import forms
 from .models import Image
+
+
 class ImageCreateForm(forms.ModelForm):
     class Meta:
         model = Image
@@ -145,10 +171,13 @@ class ImageCreateForm(forms.ModelForm):
             'url': forms.HiddenInput,
         }
 ```
-如你所见，这是一个通过`Image`模型创建的`ModelForm`（模型表单），但是这个表单只包含了 `title`,`url`,`description`字段。我们的用户不会在表单中直接为图片添加 URL。相反的，他们将会使用一个 JavaScropt 工具来从其他网站中选择一张图片然后我们的表单将会以参数的形式接收这张图片的 URL。我们覆写 `url` 字段的默认控件（widget）为一个`HiddenInput`控件，这个控件将会被渲染为属性是 `type="hidden"`的 HTML 元素。使用这个控件是因为我们不想让用户看见这个字段。
-##**清洁表单字段**
+
+如你所见，这是一个通过`Image`模型创建的`ModelForm`（模型表单），但是这个表单只包含了 `title`,`url`,`description`字段。我们的用户不会在表单中直接为图片添加 URL。相反的，他们将会使用一个 JavaScript 工具来从其他网站中选择一张图片然后我们的表单将会以参数的形式接收这张图片的 URL。我们将 `url` 字段的默认控件（widget）改为一个`HiddenInput`控件，这个控件将会被渲染为属性是 `type="hidden"`的 HTML 元素。使用这个控件是因为我们不想让用户看见这个字段。
+
+##清洁表单字段
 （译者注：原文标题是：cleaning form fields,在数据处理中有个术语是“清洗数据”，但是这里的清洁还有“使其整洁”的含义，感觉更加符合`clean_url`这个方法的定位。）
-为了验证提供的图片 URL 是否合法，我们将检查以`.jpg`或`.jpeg`结尾的文件名，来只允许JPG文件的上传。Django允许你自定义表单方法来清洁特定的字段，通过使用以`clean_<fieldname>`形式命名的方法来实现。这个方法会在你为一个表单实例执行`is_valid()`时执行。在清洁方法中，你可以改变字段的值或者为某个特定的字段抛出错误当需要的时候，将下面这个方法添加进`ImageCreateForm`:
+
+为了验证提供的图片 URL 是否合法，我们将检查以`.jpg`或`.jpeg`结尾的文件名，来只允许JPG文件的上传。Django允许你自定义表单方法来清洁特定的字段，通过使用以`clean_<fieldname>`形式命名的方法来实现。这个方法会在你为一个表单实例执行`is_valid()`时执行。在清洁方法中，当需要的时候你可以改变字段的值或者为某个特定的字段抛出错误，将下面这个方法添加进`ImageCreateForm`:
 
 ```python
 def clean_url(self):
@@ -160,21 +189,25 @@ def clean_url(self):
                                    'match valid image extensions.')
     return url
 ```
+
 在这段代码中，我们定义了一个`clean_url`方法来清洁`url`字段，这段代码的工作流程是：
  
- * 1. 我们从表单实例的`cleaned_data`字典中获取了`url`字段的值
- * 2. 我们分离了 URL 来获取文件扩展名，然后检查它是否为合法扩展名之一。如果它不是一个合法的扩展名，我们就会抛出`ValidationError`,并且表单也不会被认证。我们执行的是一个非常简单的认证。你可以使用更好的方法来验证所给的 URL 是否是一个合法的图片。
+ 1. 我们从表单实例的`cleaned_data`字典中获取了`url`字段的值
+ 2. 我们分离了 URL 来获取文件扩展名，然后检查它是否为合法扩展名之一。如果它不是一个合法的扩展名，我们就会抛出`ValidationError`，并且表单也不会被认证。我们执行的是一个非常简单的认证。你可以使用更好的方法来验证所给的 URL 是否是一个合法的图片。
+
 除了验证所给的 URL， 我们还需要下载并保存图片文件。比如，我们可以使用操作表单的视图来下载图片。不过，我们将采用一个更加通用的方法 ———— 通过覆写我们模型表单中`save()`方法来完成这个任务。
 
-##**覆写模型表单中的save()方法**
+##覆写模型表单中的save()方法
 如你所知，`ModelForm`提供了一个`save()`方法来保存目前的模型实例到数据库中，并且返回一个对象。这个方法接受一个布尔参数`commit`，这个参数允许你指定这个对象是否要被储存到数据库中。如果`commit`是`False`，`save()`方法将会返回一个模型实例但是并不会把这个对象保存到数据库中。我们将覆写表单中的`save()`方法，来下载图片然后保存它。
-将以下的包在`foroms.py`中的顶部导入：
+
+在`forms.py`中的顶部导入以下的包：
 
 ```python
 from urllib import request
 from django.core.files.base import ContentFile
 from django.utils.text import slugify
 ```
+
 把`save()`方法加入`ImageCreateForm`中：
 
 ```python
@@ -184,31 +217,35 @@ def save(self, force_insert=False,
     image = super(ImageCreateForm, self).save(commit=False)
     image_url = self.cleaned_data['url']
     image_name = '{}.{}'.format(slugify(image.title),
-    image_url.rsplit('.', 1)[1].lower())
-# 从给定的 URL 中下载图片
+                                image_url.rsplit('.', 1)[1].lower())
+
+    # 从给定的 URL 中下载图片
     response = request.urlopen(image_url)
     image.image.save(image_name,
-                    ContentFile(response.read()),
-                    save=False)
+                     ContentFile(response.read()),
+                     save=False)
     if commit:
         image.save()
     return image
 ```
+
 我们覆写的`save()`方法保持了`ModelForm`中需要的参数、
 这段代码：
+
  1. 我们通过调用`save()`方法从表单中新建了一个`image`对象，并且`commit=False`
  2. 我们从表单的`cleaned_data`字典中获取了 URL 
  3. 我们通过结合`image`的标题 slug 和源文件的扩展名生成了图片的名字
- 4. 我们使用 Python 的 `urllib` 模块来下载图片，然后我们调用`save()`方法把图片传递给一个`ContentFiel`对象，这个对象被下载的文件所实例化。这样，我们就可以将我们的文件保存到项目中的 media 路径下。我们传递了参数`comiit=False`来避免对象被保存到数据库中。
+ 4. 我们使用 Python 的 `urllib` 模块来下载图片，然后我们调用`save()`方法把图片传递给一个`ContentFile`对象，这个对象被下载的文件所实例化。这样，我们就可以将我们的文件保存到项目中的 media 路径下。我们传递了参数`commit=False`来避免对象被保存到数据库中。
  5. 为了保持和我们覆写的`save()`方法一样的行为，我们将在`commit`参数为`Ture`时保存表单到数据库中。
 
-现在我们需要一个新的视图来控制我们的表单。编辑 iamges 应用的`views.py`文件，然后将以下代码添加进去:
+现在我们需要一个新的视图来控制我们的表单。编辑 images 应用的`views.py`文件，然后将以下代码添加进去:
 
 ```python
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import ImageCreateForm
+
 
 @login_required
 def image_create(request):
@@ -236,11 +273,13 @@ def image_create(request):
                                                         'form': form})
 
 ```
+
 我们给`image_create`视图添加了一个`login_required`装饰器，来阻止未认证的用户的连接。这段代码完成下面的工作：
+
  1. 我们先从 GET 中获取初始数据来创建一个表单实例。这个数据由来自外部网站图片的`url`和`title`属性构成，并且将由我们等会儿要创建的 JavaScript 工具提供。现在我们只是假设这里有初始数据。
  2. 如果表单被提交我们将检查它是否合法。如果这个表单是合法的，我们将新建一个`Image`实例，但是我们通过传递`commit=False`来保证这个对象将不会保存到数据库中。
- 3. 我们将绑定当前用户（user）到一个新的`iamge`对象。这样我们就可以知道是谁上传了每一张图片。
- 4. 我们把 iamge 对象保存到了数据库中
+ 3. 我们将绑定当前用户（user）到一个新的`image`对象。这样我们就可以知道是谁上传了每一张图片。
+ 4. 我们把 image 对象保存到了数据库中
  5. 最后，我们使用 Django 的信息框架创建了一条上传成功的消息然后重定向用户到新图像的规范 URL 。我们没有在 Image 模型中实现`get_absolute_url()`方法，我们等会儿将编写它。
 
 在你的 images 应用中创建一个叫做`urls.py`的新文件，然后添加如下代码：
@@ -253,6 +292,7 @@ urlpatterns = [
     url(r'^create/$', views.image_create, name='create'),
 ]
 ```
+
 像下面这样编辑在你项目文件夹中的主`urls.py`文件，将我们刚才为 images 应用创建的 url 模式添加进去：
 
 ```python
@@ -262,6 +302,7 @@ urlpatterns = [
     url(r'^images/', include('images.urls', namespace='images')),
 ]
 ```
+
 最后，你需要创建一个模板来渲染你的表单。在你的 images 应用路径下创建如下路径结构：
 
 ```
@@ -270,6 +311,7 @@ templates/
        image/
           create.html
 ```
+
 编辑新的 `create.html` 模板然后添加以下代码进去：
 
 ```html
@@ -288,15 +330,21 @@ templates/
 {% endblock %}
 
 ```
+
 现在在你的浏览器中打开`http://127.0.0.1:8000/images/create/?title=...&url=...`，记得在 后面传递 GET 参数`title`和`url`来提供一个已存在的JPG图像的 URL 。
 举个例子，你可以使用像下面这样的 URL：
+
 ```
 http://127.0.0.1:8000/images/create/?title=%20Django%20and%20Duke&url=http://upload.wikimedia.org/wikipedia/commons/8/85/Django_Reinhardt_and_Duke_Ellington_%28Gottlieb%29.jpg
 ```
+
 你可以看到一个带有图片预览的表单，就像下面这样：
-![Django-5-2][2]
+
+![](images/chap5-img2.png)
+
 添加描述然后点击 **Bookmark it！**按钮。一个新的 `Image`对象将会被保存在你的数据库中。你将会得到一个错误，这个错误指示说`Image`模型没有`get_absolute_url()`方法。现在先不要担心这个，我们待会儿将添加这个方法、在你的浏览器中打开`http://127.0.0.1:8000/admin/images/image/`，确定新的图像对象已经被保存了。
-##**用 jQuery 创建一个书签**
+
+##用 jQuery 创建一个书签
 书签是一个保存在浏览器中包含 JavaScript 代码的标签，用来拓展浏览器功能。当你点击书签的时候， JavaScript 代码会在浏览器显示的网站中被执行。这是一个在和其它网站交互时非常有用的工具。
 
 一些在线服务，比如 Pinterest 实现了他们自己的书签来让用户可以在他们的平台中分享来自其他网站的内容，我们将以同样的方式创建一个书签，让用户可以在我们的网站中分享来自其他网站的图片。
