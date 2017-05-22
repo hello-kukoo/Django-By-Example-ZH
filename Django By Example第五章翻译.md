@@ -18,7 +18,7 @@
  * 实现 AJAX 视图（views）并且使这些视图（views）和 jQuery 融合
  * 为视图（views）创建定制化的装饰器 （decorators）
  * 创建 AJAX 分页
- 
+
 ##建立一个能为图片打标签的网站
 我们将允许用户可以在我们网站中分享他们在其他网站发现的图片，并且他们还可以为这些图片打上标签。为了达到这个目的，我们将要做以下几个任务：
 
@@ -27,13 +27,13 @@
  * 为用户创建一个可以上传他们在其他网站发现的图片的系统
 
 首先，通过以下命令在你的 bookmarks 项目中新建一个应用：
-    
+
     django-admin startapp images
-    
+
 像如下所示一样在你的 `settings.py` 文件中 `INSTALED_APPS` 设置项下添加 'images' :
 
     INSTALLED_APPS = [
-        # ... 
+        # ...
         'images',
     ]
 
@@ -57,7 +57,7 @@ class Image(models.Model):
     description = models.TextField(blank=True)
     created = models.DateField(auto_now_add=True,
                                db_index=True)
-    
+
     def __str__(self):
         return self.title
 
@@ -191,7 +191,7 @@ def clean_url(self):
 ```
 
 在这段代码中，我们定义了一个`clean_url`方法来清洁`url`字段，这段代码的工作流程是：
- 
+
  1. 我们从表单实例的`cleaned_data`字典中获取了`url`字段的值
  2. 我们分离了 URL 来获取文件扩展名，然后检查它是否为合法扩展名之一。如果它不是一个合法的扩展名，我们就会抛出`ValidationError`，并且表单也不会被认证。我们执行的是一个非常简单的认证。你可以使用更好的方法来验证所给的 URL 是否是一个合法的图片。
 
@@ -233,7 +233,7 @@ def save(self, force_insert=False,
 这段代码：
 
  1. 我们通过调用`save()`方法从表单中新建了一个`image`对象，并且`commit=False`
- 2. 我们从表单的`cleaned_data`字典中获取了 URL 
+ 2. 我们从表单的`cleaned_data`字典中获取了 URL
  3. 我们通过结合`image`的标题 slug 和源文件的扩展名生成了图片的名字
  4. 我们使用 Python 的 `urllib` 模块来下载图片，然后我们调用`save()`方法把图片传递给一个`ContentFile`对象，这个对象被下载的文件所实例化。这样，我们就可以将我们的文件保存到项目中的 media 路径下。我们传递了参数`commit=False`来避免对象被保存到数据库中。
  5. 为了保持和我们覆写的`save()`方法一样的行为，我们将在`commit`参数为`Ture`时保存表单到数据库中。
@@ -348,9 +348,10 @@ http://127.0.0.1:8000/images/create/?title=%20Django%20and%20Duke&url=http://upl
 书签是一个保存在浏览器中包含 JavaScript 代码的标签，用来拓展浏览器功能。当你点击书签的时候， JavaScript 代码会在浏览器显示的网站中被执行。这是一个在和其它网站交互时非常有用的工具。
 
 一些在线服务，比如 Pinterest 实现了他们自己的书签来让用户可以在他们的平台中分享来自其他网站的内容，我们将以同样的方式创建一个书签，让用户可以在我们的网站中分享来自其他网站的图片。
-我们将使用 jQuery 来创建我们的书签。 jQuery 是一个流行的 JavaScript 框架， 这个框架允许你快速开发客户端的功能。你可以在官网中更多的了解 jQuery: http://jquery.com/ 
+我们将使用 jQuery 来创建我们的书签。 jQuery 是一个流行的 JavaScript 框架， 这个框架允许你快速开发客户端的功能。你可以在官网中更多的了解 jQuery: http://jquery.com/
 
 你的用户将会像下面这样在他们的浏览器中添加书签然后使用它：
+
  1. 用户从你的网站中拖拽一个链接到他的浏览器。这个链接在它的`href`属性中包含了 JavaScript 代码。这段代码将会被储存到书签当中。
  2. 用户访问任意一个网站，然后点击这个书签， 这个书签的 JavaScript 代码就被执行了。
 
@@ -369,7 +370,7 @@ http://127.0.0.1:8000/images/create/?title=%20Django%20and%20Duke&url=http://upl
     }
 })();
 ```
-这段脚本通过检查 `myBookmarklet`变量是否被定义来检测书签是否被加载。这样，我们就可以避免在用户重复点击书签时重复加载。如果 `myBookmarklet` 没有被定义，我们就再加载一个 JavaScript 文件来在文档中添加一个`<script>`元素。 这个 `script` 标签加载 `bookmarklet_launcher.js`脚本，将一个随机数作为参数来防止加载浏览器缓存中的文件。
+这段脚本通过检查 `myBookmarklet`变量是否被定义来检测书签是否被加载。这样，我们就可以避免在用户重复点击书签时重复加载。如果 `myBookmarklet` 没有被定义，我们就在文档中添加一个`<script>`元素来加载一个 JavaScript 文件。 这个 `script` 标签加载 `bookmarklet_launcher.js`脚本，将一个随机数作为参数来防止加载浏览器缓存中的文件。
 
 我们当前的 bookmarklet 代码位于 `bookmarklet.js` 静态文件中。这使我们在不要求用户更新书签的情况下更新我们代码。让我们把书签添加进 dashboard 页，我们的用户就可以将它拷贝到他们的书签中。
 
@@ -382,32 +383,34 @@ http://127.0.0.1:8000/images/create/?title=%20Django%20and%20Duke&url=http://upl
 
 {% block content %}
     <h1>Dashboard</h1>
-    
+
     {% with total_images_created=request.user.images_created.count %}
         <p>Welcome to your dashboard. You have bookmarked {{ total_images_created }} image{{ total_images_created|pluralize }}.</p>
     {% endwith %}
-    
+
     <p>Drag the following button to your bookmarks toolbar to bookmark images from other websites → <a href="javascript:{% include "bookmarklet_launcher.js" %}" class="button">Bookmark it!</a><p>
-    
+
     <p>You can also <a href="{% url "edit" %}">edit your profile</a> or <a href="{% url "password_change" %}">change your password</a>.<p>
 {% endblock %}
 ```
+
 这个 danshboard 展示了用户所标记的图片总数。我们使用`{% with %}`模板标签来设置一个带有用户标记图片总数的参数。我们也引入了一个带有`href`属性的链接，这个链接含有我们的书签激活脚本。我们从`  bookmarklet_launcher.js`模板中引入 JavaScript 脚本。
 
 在你的浏览器中打开` http://127.0.0.1:8000/account/ `,你可以看到如下页面：
-![此处输入图片的描述][3]
+
+![](images/chap5-img3.png)
 
 
 拖拽`Bookmark it!`链接到你的浏览器的书签工具栏中。
 
-现在创建下面几个路径和文件在 images 应用路径中：
+现在在 images 应用路径中创建下面几个路径和文件：
 
  - static/
  - js/
  - bookmarklet.js
 
 你会在本章示例代码文件夹中的images 应用路径下找到 `static/css/` 路径。复制 `css/` 路径到你的代码文件夹下的`static/`中。` css/bookmarklet.css`文件为我们的 JavaScript 书签提供了样式。
-编辑`  bookmarklet.js`静态文件，然后添加以下 JavaScript 代码：
+编辑`bookmarklet.js`静态文件，然后添加以下 JavaScript 代码：
 
 ```JavaScript
 (function(){
@@ -419,8 +422,9 @@ http://127.0.0.1:8000/images/create/?title=%20Django%20and%20Duke&url=http://upl
 
   function bookmarklet(msg) {
       // Here goes our bookmarklet code
-);
- // Check if jQuery is loaded
+  };
+
+  // Check if jQuery is loaded
   if(typeof window.jQuery != 'undefined') {
     bookmarklet();
   } else {
@@ -451,13 +455,14 @@ http://127.0.0.1:8000/images/create/?title=%20Django%20and%20Duke&url=http://upl
 
 })()
 ```
-这是主要的 jQuery 加载脚本，当脚本已经加载到当前网站中时，它负责调用 JQuery 或者是从 Google 的 CDN 中加载 jQuery。当 jQuery 被加载，它会执行` bookmarklet()`函数，该函数包含我们的bookmarklet代码。我们还在这个文件顶部设置几个变量：
 
- - `jquery_version`: 加载的 jQuery 版本 
+这是主要的 jQuery 加载脚本，当脚本已经加载到当前网站中时，它负责调用 jQuery 或者是从 Google 的 CDN 中加载 jQuery。当 jQuery 被加载，它会执行`bookmarklet()`函数，该函数包含我们的bookmarklet代码。我们还在这个文件顶部设置几个变量：
+
+ - `jquery_version`: 加载的 jQuery 版本
  - `site_url`和`static_url`：我们网站的主URL 和各自静态文件的主URL
  - `min_width`和`min_height `：我们的书签在网站中将要寻找的图像支持的最小宽度和最小高度，
 
-现在让我们来实现 `bookmarklet`函数，编辑`  bookmarklet()`，让它看起来像这样：
+现在让我们来实现 `bookmarklet`函数，编辑`bookmarklet()`，让它看起来像这样：
 
 ```JavaScript
   function bookmarklet(msg) {
@@ -474,17 +479,18 @@ http://127.0.0.1:8000/images/create/?title=%20Django%20and%20Duke&url=http://upl
     box_html = '<div id="bookmarklet"><a href="#" id="close">&times;</a><h1>Select an image to bookmark:</h1><div class="images"></div></div>';
     jQuery('body').append(box_html);
 
-	  // close event
-	  jQuery('#bookmarklet #close').click(function(){
-      jQuery('#bookmarklet').remove();
-	  });
-      };
+	// close event
+	jQuery('#bookmarklet #close').click(function(){
+        jQuery('#bookmarklet').remove();
+	});
+  };
 ```
 
 这段代码运行如下：
+
  1. 我们加载了`bookmarklet.css`样式表，使用一个随机的数字作为参数来避免浏览器的缓存
  2. 我们添加了定制的 HTML 到当前网站的`<body>`元素中。这个HTML由包含在当前网站寻找到的图片的`<div>`元素构成的。
- 3. 我们添加了一个事件，当用户点击我们的 HTML 块中的关闭链接时，我们将移除我们添加进去的 HTML。我们使用 `#bookmarklet``#close`选择器来找到带有一个 ID 为`close`的 HTML 元素，这个 HTML 元素的父ID是 `bookmarklet`。jQuery 选择器允许你寻找 HTML 元素。jQuery 选择器返回所有给定的 CSS 选择器找到的元素，你可以在这个链接中找到一组 jQuery 选择器：http://api.jquery.com/category/selectors/
+ 3. 我们添加了一个事件，当用户点击我们的 HTML 块中的关闭链接时，我们将移除我们添加进去的 HTML。我们使用 `#bookmarklet #close`选择器来找到带有一个 ID 为`close`的 HTML 元素，这个 HTML 元素的父ID是 `bookmarklet`。jQuery 选择器允许你寻找 HTML 元素。jQuery 选择器返回所有给定的 CSS 选择器找到的元素，你可以在这个链接中找到一组 jQuery 选择器：http://api.jquery.com/category/selectors/
 
 在加载了 CSS 样式表和 HTML 后，我们需要在网站中找到图片。在`bookmarklet()`函数的底部添加如下代码：
 
@@ -498,6 +504,7 @@ http://127.0.0.1:8000/images/create/?title=%20Django%20and%20Duke&url=http://upl
       }
     });
 ```
+
 这段代码使用了`img[src$="jpg"]`选择器来找到所有的`<img>` HTML 元素，并且这些元素的`src`属性以`jpg`结尾。这意味着我们会找到当前网页中所有的 JPG 图片。我们通过`each()`方法来遍历所有的结果。我们添加了`<div class="images">` HTML 容器用以放置图片，容器的的尺寸刚好比`min_width`和` min_width`大一点。
 
 这个 HTML 容器现在包含了可以被打上标签的图片，我们想要用户点击他们需要的图片然后给他们打上标签。在`bookmarklet()`函数中添加以下代码：
@@ -515,18 +522,23 @@ http://127.0.0.1:8000/images/create/?title=%20Django%20and%20Duke&url=http://upl
                   '_blank');
     });
 ```
+
 这段代码按照如下流程运行：
- 1. 我们把一个`clck()`事件绑定到了图片的链接元素上
+
+ 1. 我们把一个`click()`事件绑定到了图片的链接元素上
  2. 当一个用户点击一个图片时我们新建了一个变量`selected_image`，这个变量包含了被选择的图片的 URL。
- 3. 我们隐藏了书签然后在浏览器中打开一个新的窗口，这个窗口访问了我们的网站中为一个新的图片打标签的 URL 。我们传递了网站的`title`元素和被选中图片的 URL 作为 GET 参数。
+ 3. 我们隐藏了书签然后在浏览器中打开一个新的窗口，这个窗口访问了我们的网站中为一个新的图片打标签的 URL。我们传递了网站的`title`元素和被选中图片的 URL 作为 GET 参数。
 
 在你的浏览器中随便选择一个网址打开，然后点击你的书签。你将会看到一个白色的新窗口出现在当前网页上，它展示了所有尺寸大于 100*100px 的 JPG 图片，它看起来就像下面的例子一样：
-![django-5-4][4]
+
+![](images/chap5-img4.png)
+
 因为我们已经开启了 Django 的开发服务器，使用 HTTP 来提供页面， 由于安全限制，书签将不能在 HTTPS 上工作。
 
 如果你点击一幅图片，你将会被重定向到创建图片的页面，请求地址传递了网站的标题和被选中图片的 URL 作为 GET 参数。
 
-![Django-5-5][5]
+![](images/chap5-img5.png)
+
 恭喜！这是你的第一个 JavaScript 书签！现在它已经和你的 Django 项目成为一体！
 
 ##**为你的图片创建一个详情视图**
@@ -657,9 +669,9 @@ def image_like(request):
 我们在这个视图中使用了两个装饰器。 `login_required` 装饰器阻止未登录的用户连接到这个视图。`require_GET` 装饰器返回一个`HttpResponseNotAlloed`对象（状态吗：405）如果 HTTP 请求不是 GET 。这样就可以只允许 GET 请求来访问这个视图。 Django 同样也提供了`require_POST`装饰器来只允许 POST 请求，以及一个可让你传递一组请求方法作为参数的 `require_http_methods`装饰器。
 
 在这个视图中我们使用了两个 GET 参数：
- 1. `image_id`:用户操作的 image 对象的 ID 
+ 1. `image_id`:用户操作的 image 对象的 ID
  2. `action`: 用户想要执行的动作。我们把它的值设定为`like`或者'`dislike`
- 
+
 我们在`Image`模型的多对多字段`users_like`上使用 Django 提供的管理器来添加或者删除对象关系通过调用`add()`或者`remove()`方法来执行这些动作。调用`add()`时传递一个存在于关联模型中的对象集不会重复添加这个对象，同样，调用`remove()`时传递一个不存在于关联模型中的对象集什操作也不会执行。另一个有用的多对多管理器是`clear()`，它将删除所有的关联对象集。
 
 最后，我们使用 Django 提供的`JsonResponse`类来将给你定的对象转换为一个 JSON 输出，这个类返回一个带有`application/json`内容类型的 HTTP 响应。
